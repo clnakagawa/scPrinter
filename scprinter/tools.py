@@ -2732,7 +2732,7 @@ def seq_denovo_callhits(
         model_path = [model_path]
     seq_attrs = []
     save_path_dir = os.path.dirname(save_path)
-    print(save_path_dir)
+    # print(save_path_dir)
     if not os.path.exists(save_path_dir):
         os.makedirs(save_path_dir)
     for model in model_path:

@@ -388,7 +388,7 @@ def clean_macs2(
 
     if type(name) not in [list, np.ndarray]:
         name = [name]
-    cleaned_peaks, _ = make_peaks_df_bioframe(
+    cleaned_peaks, summary = make_peaks_df_bioframe(
         [os.path.join(outdir, n + "_summits.bed") for n in name],
         name,
         peak_width,
@@ -401,7 +401,7 @@ def clean_macs2(
         final_peak_width=final_peak_width,
         max_iter=max_iter,
     )
-    return cleaned_peaks
+    return cleaned_peaks, summary
 
 
 def macs2(frag_file, name, outdir, format="BEDPE", p_cutoff=None):
@@ -493,3 +493,30 @@ def macs3(frag_file, name, outdir, format="BEDPE"):
         outdir,
     ]
     subprocess.run(commands)
+
+
+def make_tile_window(genome, window_size=5000):
+    """
+    Create a tiled window across the genome.
+
+    Parameters
+    ----------
+    genome
+    window_size
+
+    Returns
+    -------
+
+    """
+
+    chrom_sizes = genome.chrom_sizes
+    chroms = list(chrom_sizes.keys())
+    chroms.sort()
+    windows = []
+    for chrom in chroms:
+        chrom_length = chrom_sizes[chrom]
+        for start in range(0, chrom_length, window_size):
+            end = min(start + window_size, chrom_length)
+            windows.append([chrom, start, end])
+    windows_df = pd.DataFrame(windows, columns=["chrom", "start", "end"])
+    return windows_df

@@ -359,6 +359,7 @@ def make_gene_matrix(
     cell_grouping: list[list[str]] | list[str] | np.ndarray | None = None,
     group_names: list[str] | str | None = None,
     sparse=True,
+    tss_window=2000,
 ):
     """
     Generate a gene matrix based on the given strategy.
@@ -415,8 +416,8 @@ def make_gene_matrix(
             tss_list.append(
                 (
                     transcript.chrom,
-                    max(tss - 10000, 0),
-                    min(tss + 10000, printer.genome.chrom_sizes[transcript.chrom] - 1),
+                    max(tss - tss_window, 0),
+                    min(tss + tss_window, printer.genome.chrom_sizes[transcript.chrom] - 1),
                     gene_name,
                 )
             )
@@ -427,6 +428,8 @@ def make_gene_matrix(
         adata.var["gene_id"] = list(regions["gene_id"])
         gene_groups = adata.var.groupby("gene_id").indices
         X = adata.X
+        print("translate to csc_matrix")
+        X = csc_matrix(X) if sparse else X
         merged_X = []
 
         new_gene_ids = []
@@ -435,6 +438,12 @@ def make_gene_matrix(
             gene_groups.items(), desc="Merging transcripts with the same gene name"
         ):
             cols = X[:, idx_list]
+            if len(idx_list) == 1:
+                # If only one transcript, just take it
+                merged_X.append(cols)
+                new_gene_ids.append(gene_id)
+                continue
+            # If multiple transcripts, merge them by summing the counts
             if issparse(cols):
                 mean_col = cols.sum(axis=1)
             else:
@@ -553,6 +562,7 @@ def export_bigwigs(
     group_names: list[str] | str,
     smooth_window=0,
     resolution=1,
+    normalize=None,
 ):
     """
     Generate bigwig files for each group which can be used for synchronized footprint visualization
@@ -569,9 +579,11 @@ def export_bigwigs(
         The name of the group you want to visualize.
         If you want to visualize multiple groups, you can provide a list of names, e.g. `['group1', 'group2']`
     smooth_window: int
-        The smooth window for the bigwig file. Default is 0.
+        The smooth window for the bigwig file. Default is 0. 250 for visualization purpose of "accessibility" is recommended.
     resolution: int
         The resolution for the bigwig file. Default is 1.
+    normalize: int | None
+        Whether to normalize the bigwig file so the total insertion is constant. Default is None. When input a constant, the bigwig will be normalized to have this total insertion count.
     Returns
     -------
 
@@ -605,6 +617,19 @@ def export_bigwigs(
             length = sig.shape[-1]
             header.append((chrom, length))
         bw.addHeader(header, maxZooms=10)
+
+        normalization_factor = 1.0
+        if normalize:
+            total_insertion = [insertion_profile[chrom][grouping].sum() for chrom in chrom_list]
+            total_insertion = np.sum(total_insertion)
+            normalization_factor = normalize / total_insertion
+            print(
+                "normalization factor is",
+                normalization_factor,
+                "to make total insertion",
+                normalize,
+            )
+
         for chrom in tqdm(chrom_list):
             sig = insertion_profile[chrom]
 
@@ -623,7 +648,7 @@ def export_bigwigs(
                     rz_conv(pseudo_bulk, smooth_window)[left_pad : left_pad + chunksize]
                     if smooth_window > 0
                     else pseudo_bulk
-                )
+                ) * normalization_factor
                 if resolution > 1:
                     pseudo_bulk = pseudo_bulk[::resolution]  # export every resolution-th base
 
@@ -816,10 +841,10 @@ def call_peaks(
         peak = os.path.join(printer.file_path, "macs2", f"{name}_peaks.narrowPeak")
         peak = resize_bed_df(pd.read_csv(peak, sep="\t", header=None, comment="#"), peak_width)
         peak_calling[name] = peak
-
+    summary = None
     if iterative_peak_merging:
         if merge_across_groups:
-            cleaned_peaks = clean_macs2(
+            cleaned_peaks, summary = clean_macs2(
                 group_names,
                 os.path.join(printer.file_path, "macs2"),
                 peak_width,
@@ -830,7 +855,7 @@ def call_peaks(
             peak_calling["merged"] = cleaned_peaks
         else:
             for name in group_names:
-                cleaned_peaks = clean_macs2(
+                cleaned_peaks, _ = clean_macs2(
                     [name],
                     os.path.join(printer.file_path, "macs2"),
                     peak_width,
@@ -840,3 +865,4 @@ def call_peaks(
                 )
                 peak_calling[name + "_cleaned"] = cleaned_peaks
     printer.uns["peak_calling"] = peak_calling
+    return summary

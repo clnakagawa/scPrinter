@@ -8,6 +8,7 @@ import sys
 import tempfile
 from copy import deepcopy
 from pathlib import Path
+from typing import Literal
 
 import anndata
 import h5py
@@ -360,6 +361,7 @@ def regionparser(
     printer=None,
     width: int | None = None,
     header: bool | None = None,
+    style: Literal["bioframe", "pyranges"] = "pyranges",
 ):
     """
     This function parses the regions specification and returns a dataframe with the first three columns ['Chromosome', 'Start', 'End']
@@ -389,7 +391,7 @@ def regionparser(
     """
     if type(regions) is list:
         if ":" in regions[0] and "-" in regions[0]:
-            regions = pd.DataFrame([re.split(":|-", xx) for xx in regions])
+            regions = pd.DataFrame([re.split(":|-", xx.replace(",", "")) for xx in regions])
             regions.columns = ["Chromosome", "Start", "End"] + list(regions.columns)[3:]
             regions["Start"] = regions["Start"].astype("int")
             regions["End"] = regions["End"].astype("int")
@@ -413,7 +415,7 @@ def regionparser(
 
         if ":" in regions and "-" in regions:
             # regions = pd.DataFrame([re.split(':|-', regions)], columns=['Chromosome', 'Start', 'End'])
-            regions = pd.DataFrame([re.split(":|-", regions)])
+            regions = pd.DataFrame([re.split(":|-", regions.replace(",", ""))])
             regions.columns = ["Chromosome", "Start", "End"] + list(regions.columns)[3:]
 
             regions["Start"] = regions["Start"].astype("int")
@@ -440,6 +442,8 @@ def regionparser(
         regions = resize_bed_df(regions, width, True)
     regions["Start"] = regions["Start"].astype("int")
     regions["End"] = regions["End"].astype("int")
+    if style == "bioframe":
+        regions.columns = ["chrom", "start", "end"] + list(regions.columns)[3:]
     return regions
 
 
