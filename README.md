@@ -53,7 +53,7 @@ pip install the following because the conda version results in version incompati
 
 ```angular2html
 pip install bioframe pysam pybedtools
-mamba install -c bioconda MACS3 cykhash hmmlearn=0.3.0 python-igraph==0.11.6 pandas==2.1.1 polars==0.20.31 pyfaidx==0.7.2.2
+mamba install -c bioconda MACS3 cykhash hmmlearn python-igraph pandas polars pyfaidx
 pip install MOODS-python snapatac2 ema_pytorch modisco-lite
 git clone https://github.com/austintwang/finemo_gpu.git
 cd finemo_gpu
