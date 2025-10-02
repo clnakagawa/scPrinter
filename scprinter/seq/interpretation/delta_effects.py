@@ -92,27 +92,26 @@ def get_delta_effects(
     if type(model_path) is not list:
         model_path = [model_path]
 
-    motif2dump = []
+    motif2dump_tmp = []
 
     if isinstance(motifs, str):
         with h5py.File(motifs, "r") as f:
             for group in ["pos_patterns", "neg_patterns"]:
                 for key in f[group].keys():
                     motif = f[group][key]["sequence"][:].T
-                    nn = f"{prefix}_{group}.{key}"
-                    motif2dump.append(motif)
+                    # nn = f"{prefix}_{group}.{key}"
+                    motif2dump_tmp.append(motif)
     elif isinstance(motifs, Motifs):
         for motif in motifs.all_motifs:
             pfm = motif.counts
             pfm = np.array([pfm[key] for key in ["A", "C", "G", "T"]])
-            motif2dump.append(pfm)
+            motif2dump_tmp.append(pfm)
     else:
-        motif2dump = list(motifs.values())
+        motif2dump_tmp = list(motifs.values())
 
-    # Each motif has 3 dim to support composite motif (sth like left motif and right motif)
-
-    motif2dump = np.array(motif2dump, dtype="object")
-
+    motif2dump = np.empty((len(motif2dump_tmp),), dtype="object")
+    for i, m in enumerate(motif2dump_tmp):
+        motif2dump[i] = m
     motif_temp_file = os.path.join(save_path, "motif.npy")
     np.save(motif_temp_file, motif2dump)
     delta_effects_tempfile = os.path.join(save_path, "delta_effects.npy")
