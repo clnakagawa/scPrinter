@@ -105,7 +105,8 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
     )
     print("using dispersion model", disp_path)
     dispmodel = loadDispModel(disp_path)
-    dispmodel = dispModel(deepcopy(dispmodel)).cuda()
+    # dispmodel = dispModel(deepcopy(dispmodel)).cuda()
+    dispmodel = dispModel(deepcopy(dispmodel))
 
     data_dir = config["data_dir"]
     temp_dir = config["temp_dir"]
@@ -180,7 +181,7 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
         acc_model.dna_len = dna_len
         acc_model.signal_len = output_len
 
-    acc_model.cuda()
+    # acc_model.cuda()
     if lora_mode:
         for p in acc_model.parameters():
             p.requires_grad = False
@@ -189,7 +190,7 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
     # acc_model.profile_cnn_model.linear.weight.requires_grad = True
     # acc_model.profile_cnn_model.linear.bias.requires_grad = True
     # acc_model, dna_len, output_len = construct_model_from_config(config)
-    acc_model.cuda()
+    # acc_model.cuda()
 
     total_params = sum(p.numel() for p in acc_model.parameters())
     print("total params - pretrained model", total_params)
@@ -397,7 +398,7 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
             n_lora_layers=config["n_lora_layers"],
             coverage_in_lora=config["coverage_in_lora"],
         )
-        acc_model = acc_model.cuda()
+        # acc_model = acc_model.cuda()
 
     if pretrain_lora_model is not None:
         pretrain_lora_model = torch.load(
@@ -411,7 +412,7 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
             acc_model.coverages = nn.Embedding.from_pretrained(
                 torch.tensor(grp2covs[cells_of_interest]).float()
             )
-        acc_model = acc_model.cuda()
+        # acc_model = acc_model.cuda()
 
         # pretrain_lora_model = torch.load(pretrain_lora_model, map_location="cpu")
         # if isinstance(acc_model.profile_cnn_model, Footprints_head):
@@ -536,7 +537,7 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
             update_every=10,
         )  # how often to actually update, to save on compute (updates every 10th .update() call)
 
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     # optimizer = torch.optim.AdamW(acc_model.parameters(), lr=lr, weight_decay=weight_decay)
     # if "scheduler" in config:
     #     scheduler = config["scheduler"]
@@ -587,9 +588,12 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
     )
     if ema:
         del acc_model
-        acc_model = torch.load(
-            f"{temp_dir}/{wandb_run_name}.ema_model.pt", map_location="cpu", weights_only=False
-        ).cuda()
+        # acc_model = torch.load(
+        #     f"{temp_dir}/{wandb_run_name}.ema_model.pt", map_location="cpu", weights_only=False
+        # ).cuda()
+        acc_model = torch.load(f"{temp_dir}/{wandb_run_name}.ema_model.pt",
+                               map_location="cpu",
+                               weights_only=False)
     acc_model.eval()
     savename = config["savename"]
     acc_model.count_norm = [0, 0, 1]
@@ -617,8 +621,8 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
     del acc_model
     if ema:
         del ema
-    torch.cuda.empty_cache()
-    torch.cuda.ipc_collect()
+    # torch.cuda.empty_cache()
+    # torch.cuda.ipc_collect()
     gc.collect()
 
     # Now that the model is trained we use it to estimate the normalization range of the shap values
@@ -690,7 +694,7 @@ def entry(config=None, wandb_run_name="", enable_wandb=True, resume=False):
         wandb.finish()
         del acc_model
         gc.collect()
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
 
 def main():

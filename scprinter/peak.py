@@ -427,6 +427,7 @@ def macs2(frag_file, name, outdir, format="BEDPE", p_cutoff=None):
     -------
     None
     """
+    macs_path = "/opt/data/cnakaChIP/tools/bin/macs2"
 
     if type(frag_file) is not list:
         frag_file = [frag_file]
@@ -434,7 +435,7 @@ def macs2(frag_file, name, outdir, format="BEDPE", p_cutoff=None):
         frag_file[i] = str(frag_file[i]).replace("//", "/")  # macs2 does not like double slashes
     # assert genome is not None, "genome must be provided"
     commands = (
-        ["macs2", "callpeak", "--nomodel", "-t"]
+        [macs_path, "callpeak", "--nomodel", "-t"]
         + frag_file
         + [
             "--outdir",

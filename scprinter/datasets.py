@@ -41,11 +41,11 @@ def giverightstothegroup(fname, action, pooch):
 def datasets():
     global _datasets
     if _datasets is None:
-        # dir1 = os.path.dirname(pooch.__file__)
-        # dir1 = "/".join(dir1.split("/")[:-1])
-        # dir = os.path.join(dir1, 'scprinter_cache')
+        dir1 = os.path.dirname(pooch.__file__)
+        dir1 = "/".join(dir1.split("/")[:-1])
+        dir = os.path.join(dir1, 'scprinter_cache')
         _datasets = pooch.create(
-            path=pooch.os_cache("scprinter"),
+            path=pooch.os_cache(dir),
             base_url="",
             env="SCPRINTER_DATA",
             registry={

@@ -82,7 +82,7 @@ def import_data(
     data = snap.pp.import_data(
         path,
         file=tempname,
-        whitelist=barcode,
+        # whitelist=barcode,
         chrom_sizes=genome.chrom_sizes,
         shift_left=0,
         shift_right=0,
@@ -706,6 +706,7 @@ def create_frag_group(
 
     bcs = set(np.sort(np.unique(cell_grouping)))
     filtered_frag_file = os.path.join(temp_path, f"{group_name}_filtered_frag.tsv.gz")
+    print(filtered_frag_file)
     for frag, sample_name in zip(frag_file, sample_names):
         reader = pd.read_csv(frag, sep="\t", header=None, chunksize=100000, comment="#")
 
@@ -716,6 +717,7 @@ def create_frag_group(
             boolean_mask = [xx in bcs for xx in chunk_bc]
             chunk = chunk[boolean_mask]
             if len(chunk) > 0:
+                print("writing chunk to csv")
                 chunk.to_csv(filtered_frag_file, sep="\t", header=False, index=False, mode="a")
 
     # if type(frag_file) is list:
@@ -736,6 +738,7 @@ def call_peak_one_group(
     file_path, frag_file, grouping, name, preset, clean_temp=True, sample_names=None
 ):
     if grouping is not None:
+        print("creating fragment group")
         create_frag_group(file_path, frag_file, grouping, name, sample_names)
     macs2(
         (

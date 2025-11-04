@@ -162,7 +162,8 @@ def getRegionBindingScore(
         sites = sites
 
     else:
-        sites = region.window(tileSize)
+        print(region)
+        sites = region.tile(tileSize)
         sites = sites.df
         # to make pyranges consistent with GRanges
         # Requires double check.

@@ -567,8 +567,12 @@ def cell_grouping2cell_grouping_idx(printer, cell_grouping: list[list[str]] | np
 
     # concatenate all the embeddings
     barcodes_all = np.concatenate(cell_grouping)
+    print("Barcodes")
+    print(barcodes_all)
     # get the unique ones
     uniq = np.unique(barcodes_all)
+    print("Unique barcodes")
+    print(uniq)
     # turn barcodes into index in the insertion sparse matrix
     uniq_ix = np.array(printer.insertion_file.obs_ix(np.array(uniq)))
     # construct a mapping from uniq barcode name to its index
