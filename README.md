@@ -6,6 +6,14 @@
   <br>
 </h1>
 
+## Notes on Changes/Installation
+
+Fork of the original scPrinter tool with minor edits to ensure it runs on CFF lab platform. The original instructions for creating a conda env to run scPrinter still apply and will still work with this version. The only real changes are a tweak in which pyranges function is used to avoid a type error with the sorted_nearest helper library and changes to the training scripts to not use CUDA (may not be necessary but I was looking for a quick, simple workaround). 
+
+I ran into a couple of issues with the data download for a couple of files, though I wasn't sure if this was an issue with how I had git configured, as all files that produced errors came from github (e.g. the JASPAR motif files). There was also an issue with the version of MACS2 installed via conda throwing an error, so I hardcoded a path to a working MACS2 installation rather than fiddling with the dependencies, though this may be improved in the future (the MACS2 error was persistent in other projects and I'm not exactly sure why). 
+
+## Original README Content
+
 scPrinter is a computational framework for the multi-scale footprinting analysis of single-cell ATAC-seq data.
 scPrinter is designed to identify and visualize the regulatory elements that drive cell-type-specific gene expression programs through footprinting.
 scPrinter uses a deep learning model to predict the activity of transcription factors from single-cell ATAC-seq data.
